@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Notes Summarizer</title>
+
+  <!-- Link external CSS -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <h1>🧠 AI Notes Summarizer</h1>
+
+  <textarea id="notes" placeholder="Paste your notes here..."></textarea>
+
+  <button onclick="summarize()">Summarize</button>
+
+  <div class="output" id="output"></div>
+
+  <script>
+    async function summarize() {
+      const notes = document.getElementById("notes").value;
+      const output = document.getElementById("output");
+
+      if (!notes.trim()) {
+        output.textContent = "Paste some notes first.";
+        return;
+      }
+
+      output.textContent = "Summarizing…";
+
+      try {
+        const res = await fetch("/summarize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ notes })
+        });
+
+        const data = await res.json();
+        output.textContent = data.summary || "Something went wrong.";
+      } catch (err) {
+        output.textContent = "Server error.";
+      }
+    }
+  </script>
+
+</body>
+</html>
