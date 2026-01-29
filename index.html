@@ -2,47 +2,48 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Notes Summarizer</title>
-
-  <!-- Link external CSS -->
-  <link rel="stylesheet" href="styles.css" />
+  <title>Notes Summarizer</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-  <h1>🧠 AI Notes Summarizer</h1>
-
+  <h1>Notes Summarizer</h1>
   <textarea id="notes" placeholder="Paste your notes here..."></textarea>
-
   <button onclick="summarize()">Summarize</button>
-
   <div class="output" id="output"></div>
 
   <script>
+    const API_KEY = "AIzaSyClZXEYmyKfS-TaECvZb8CxDtDoCMWNYGY"; // <- exposed
+
     async function summarize() {
       const notes = document.getElementById("notes").value;
       const output = document.getElementById("output");
-
-      if (!notes.trim()) {
-        output.textContent = "Paste some notes first.";
-        return;
-      }
+      if (!notes.trim()) { output.textContent = "Paste some notes first."; return; }
 
       output.textContent = "Summarizing…";
 
       try {
-        const res = await fetch("/summarize", {
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ notes })
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            messages: [
+              { role: "system", content: "Summarize the following notes clearly and concisely." },
+              { role: "user", content: notes }
+            ],
+            temperature: 0.3
+          })
         });
 
         const data = await res.json();
-        output.textContent = data.summary || "Something went wrong.";
+        output.textContent = data.choices[0].message.content || "Something went wrong.";
       } catch (err) {
-        output.textContent = "Server error.";
+        output.textContent = "Error.";
       }
     }
   </script>
-
 </body>
 </html>
