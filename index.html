@@ -17,69 +17,15 @@
     </div>
 
     <textarea id="input" placeholder="Paste your notes here..."></textarea>
-    <button onclick="summarize()">Summarize</button>
+    <button id="summarizeBtn">Summarize</button>
 
     <div class="output" id="output"></div>
-    <div class="hint">Dates, vocabulary, and important numbers are color-coded consistently across notes.</div>
+
+    <div class="hint">
+      Allowed tags: &lt;date&gt;, &lt;vocab&gt;, &lt;important&gt;
+    </div>
   </div>
 
-<script>
-  const root = document.documentElement;
-
-  const defaults = {
-    date: '#b983ff',
-    vocab: '#ff9f43',
-    important: '#ffd166'
-  };
-
-  function loadColors() {
-    const date = localStorage.getItem('dateColor') || defaults.date;
-    const vocab = localStorage.getItem('vocabColor') || defaults.vocab;
-    const important = localStorage.getItem('importantColor') || defaults.important;
-
-    root.style.setProperty('--date-color', date);
-    root.style.setProperty('--vocab-color', vocab);
-    root.style.setProperty('--important-color', important);
-
-    dateColor.value = date;
-    vocabColor.value = vocab;
-    importantColor.value = important;
-  }
-
-  function bindColor(id, key, cssVar) {
-    document.getElementById(id).addEventListener('input', e => {
-      const value = e.target.value;
-      root.style.setProperty(cssVar, value);
-      localStorage.setItem(key, value);
-    });
-  }
-
-  loadColors();
-  bindColor('dateColor', 'dateColor', '--date-color');
-  bindColor('vocabColor', 'vocabColor', '--vocab-color');
-  bindColor('importantColor', 'importantColor', '--important-color');
-
-  function summarize() {
-    const text = document.getElementById('input').value;
-    const output = document.getElementById('output');
-
-    if (!text.trim()) {
-      output.textContent = 'Please paste some notes to summarize.';
-      return;
-    }
-
-    const sentences = text.replace(/\n+/g, ' ').match(/[^.!?]+[.!?]+/g) || [];
-    const summary = sentences.length <= 2 ? text : sentences.slice(0, Math.max(2, sentences.length * 0.3)).join(' ');
-
-    output.innerHTML = highlight(summary);
-  }
-
-  function highlight(text) {
-    return text
-      .replace(/\b(?:\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{4})\b/g, '<span class="tag date">$&</span>')
-      .replace(/\b\d+(?:\.\d+)?\b/g, '<span class="tag important">$&</span>')
-      .replace(/\b[a-zA-Z]{8,}\b/g, '<span class="tag vocab">$&</span>');
-  }
-</script>
+  <script src="script.js"></script>
 </body>
 </html>
