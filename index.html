@@ -2,48 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Notes Summarizer</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Note Summarizer</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Notes Summarizer</h1>
-  <textarea id="notes" placeholder="Paste your notes here..."></textarea>
-  <button onclick="summarize()">Summarize</button>
-  <div class="output" id="output"></div>
+  <div class="app">
+    <h1>📝 Note Summarizer</h1>
 
-  <script>
-    const API_KEY = "AIzaSyClZXEYmyKfS-TaECvZb8CxDtDoCMWNYGY"; // <- exposed
+    <div class="controls">
+      <div class="control">📅 Date <input type="color" id="dateColor"></div>
+      <div class="control">📚 Vocab <input type="color" id="vocabColor"></div>
+      <div class="control">⭐ Important <input type="color" id="importantColor"></div>
+    </div>
 
-    async function summarize() {
-      const notes = document.getElementById("notes").value;
-      const output = document.getElementById("output");
-      if (!notes.trim()) { output.textContent = "Paste some notes first."; return; }
+    <textarea id="input" placeholder="Paste your notes here..."></textarea>
+    <button onclick="summarize()">Summarize</button>
 
-      output.textContent = "Summarizing…";
+    <div class="output" id="output"></div>
+    <div class="hint">Dates, vocabulary, and important numbers are color-coded consistently across notes.</div>
+  </div>
 
-      try {
-        const res = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            messages: [
-              { role: "system", content: "Summarize the following notes clearly and concisely." },
-              { role: "user", content: notes }
-            ],
-            temperature: 0.3
-          })
-        });
+<script>
+  const root = document.documentElement;
 
-        const data = await res.json();
-        output.textContent = data.choices[0].message.content || "Something went wrong.";
-      } catch (err) {
-        output.textContent = "Error.";
-      }
+  const defaults = {
+    date: '#b983ff',
+    vocab: '#ff9f43',
+    important: '#ffd166'
+  };
+
+  function loadColors() {
+    const date = localStorage.getItem('dateColor') || defaults.date;
+    const vocab = localStorage.getItem('vocabColor') || defaults.vocab;
+    const important = localStorage.getItem('importantColor') || defaults.important;
+
+    root.style.setProperty('--date-color', date);
+    root.style.setProperty('--vocab-color', vocab);
+    root.style.setProperty('--important-color', important);
+
+    dateColor.value = date;
+    vocabColor.value = vocab;
+    importantColor.value = important;
+  }
+
+  function bindColor(id, key, cssVar) {
+    document.getElementById(id).addEventListener('input', e => {
+      const value = e.target.value;
+      root.style.setProperty(cssVar, value);
+      localStorage.setItem(key, value);
+    });
+  }
+
+  loadColors();
+  bindColor('dateColor', 'dateColor', '--date-color');
+  bindColor('vocabColor', 'vocabColor', '--vocab-color');
+  bindColor('importantColor', 'importantColor', '--important-color');
+
+  function summarize() {
+    const text = document.getElementById('input').value;
+    const output = document.getElementById('output');
+
+    if (!text.trim()) {
+      output.textContent = 'Please paste some notes to summarize.';
+      return;
     }
-  </script>
+
+    const sentences = text.replace(/\n+/g, ' ').match(/[^.!?]+[.!?]+/g) || [];
+    const summary = sentences.length <= 2 ? text : sentences.slice(0, Math.max(2, sentences.length * 0.3)).join(' ');
+
+    output.innerHTML = highlight(summary);
+  }
+
+  function highlight(text) {
+    return text
+      .replace(/\b(?:\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{4})\b/g, '<span class="tag date">$&</span>')
+      .replace(/\b\d+(?:\.\d+)?\b/g, '<span class="tag important">$&</span>')
+      .replace(/\b[a-zA-Z]{8,}\b/g, '<span class="tag vocab">$&</span>');
+  }
+</script>
 </body>
 </html>
